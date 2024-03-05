@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDPcTcR-TQX2glw994BU6QFZaAc4YQW_FU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>235386985445</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.shuttle.shuttleride</string>
+	<key>PROJECT_ID</key>
+	<string>shuttleride-with-admin</string>
+	<key>STORAGE_BUCKET</key>
+	<string>shuttleride-with-admin.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:235386985445:ios:04edb2c522f5d81b236d0c</string>
+</dict>
+</plist>

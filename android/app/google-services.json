@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235386985445",
+    "project_id": "shuttleride-with-admin",
+    "storage_bucket": "shuttleride-with-admin.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235386985445:android:144096ea4c3da9a7236d0c",
+        "android_client_info": {
+          "package_name": "com.shuttle.shuttleride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSN0ZZFwAnfFhuRfjVtoX6MrVQmqWa3bc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

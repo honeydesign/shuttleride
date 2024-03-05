@@ -1,5 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shuttleride/authentication/signup_screen.dart';
+import 'package:shuttleride/global/global_var.dart';
+
+import '../methods/common_methods.dart';
+import '../pages/home_page.dart';
+import '../widgets/loading_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +22,81 @@ class _LoginScreenState extends State<LoginScreen>
 {
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
+  CommonMethods cMethods = CommonMethods();
+
+  checkIfNetworkIsAvailable()
+  {
+    cMethods.checkConnectivity(context);
+
+    signinFormValidation();
+
+  }
+
+  signinFormValidation()
+  {
+
+    if(!emailTextEditingController.text.contains("@"))
+    {
+      cMethods.displaySnackBar("Please write valid email.", context);
+    }
+    else if(passwordTextEditingController.text.trim().length < 5)
+    {
+      cMethods.displaySnackBar("Your password must be at least 6 or more characters.", context);
+    }
+    else
+    {
+      signInUser();
+    }
+  }
+
+  signInUser() async
+  {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => LoadingDialog(messageText: "Allowing you to login..."),
+    );
+
+    final User? userFirebase = (
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailTextEditingController.text.trim(),
+          password: passwordTextEditingController.text.trim(),
+        ).catchError((errorMsg)
+        {
+          Navigator.pop(context);
+          cMethods.displaySnackBar(errorMsg.toString(), context);
+        })
+    ).user;
+
+    if(!context.mounted) return;
+    Navigator.pop(context);
+
+    if(userFirebase != null)
+    {
+      DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("users").child(userFirebase.uid);
+      usersRef.once().then((snap)
+      {
+        if(snap.snapshot.value != null)
+        {
+          if((snap.snapshot.value as Map)["blockStatus"] == "no")
+          {
+            userName = (snap.snapshot.value as Map)["name"];
+            Navigator.push(context, MaterialPageRoute(builder: (c)=> HomePage()));
+          }
+          else
+          {
+            FirebaseAuth.instance.signOut();
+            cMethods.displaySnackBar("You are blocked.", context);
+          }
+        }
+        else
+        {
+          FirebaseAuth.instance.signOut();
+          cMethods.displaySnackBar("Your record does not exist as a user", context);
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context)
@@ -87,7 +169,9 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 22,),
 
                     ElevatedButton(
-                      onPressed: (){
+                      onPressed: ()
+                      {
+                        checkIfNetworkIsAvailable();
 
                       },
                       style: ElevatedButton.styleFrom(
