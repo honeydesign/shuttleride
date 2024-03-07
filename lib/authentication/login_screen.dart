@@ -5,7 +5,7 @@ import 'package:shuttleride/authentication/signup_screen.dart';
 import 'package:shuttleride/global/global_var.dart';
 
 import '../methods/common_methods.dart';
-import '../pages/home_page.dart';
+import '../pages/dashboard.dart';
 import '../widgets/loading_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -73,15 +73,15 @@ class _LoginScreenState extends State<LoginScreen>
 
     if(userFirebase != null)
     {
-      DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("users").child(userFirebase.uid);
+      DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("drivers").child(userFirebase.uid);
       usersRef.once().then((snap)
       {
         if(snap.snapshot.value != null)
         {
           if((snap.snapshot.value as Map)["blockStatus"] == "no")
           {
-            userName = (snap.snapshot.value as Map)["name"];
-            Navigator.push(context, MaterialPageRoute(builder: (c)=> HomePage()));
+            // userName = (snap.snapshot.value as Map)["name"];
+            Navigator.push(context, MaterialPageRoute(builder: (c)=> Dashboard()));
           }
           else
           {
@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen>
         else
         {
           FirebaseAuth.instance.signOut();
-          cMethods.displaySnackBar("Your record does not exist as a user", context);
+          cMethods.displaySnackBar("Your record does not exist as a driver", context);
         }
       });
     }
@@ -108,14 +108,23 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             children: [
 
+              const SizedBox(
+                height: 60,
+              ),
+
               Image.asset(
-                  "assets/images/bluelogo.jpg"
+                  "assets/images/uberexec.png",
+                  width: 220,
+              ),
+
+              const SizedBox(
+                height: 30,
               ),
 
               Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Text(
-                  "Login as a User",
+                  "Login as a Driver",
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -135,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen>
                       controller: emailTextEditingController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: "User Email",
+                        labelText: "Your Email",
                         labelStyle: TextStyle(
                             fontSize: 14
                         ),

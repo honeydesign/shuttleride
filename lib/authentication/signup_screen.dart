@@ -1,11 +1,20 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:get/utils.dart';
-import 'package:shuttleride/authentication/login_screen.dart';
-import 'package:shuttleride/methods/common_methods.dart';
-import 'package:shuttleride/pages/home_page.dart';
-import 'package:shuttleride/widgets/loading_dialog.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shuttleride/pages/dashboard.dart';
+import '../methods/common_methods.dart';
+import '../widgets/loading_dialog.dart';
+import 'login_screen.dart';
+// import 'package:get/utils.dart';
+// import 'package:shuttleride/authentication/login_screen.dart';
+// import 'package:shuttleride/methods/common_methods.dart';
+// import 'package:shuttleride/pages/dashboard.dart';
+// import 'package:shuttleride/widgets/loading_dialog.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,23 +28,54 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen>
 {
   TextEditingController userNameTextEditingController = TextEditingController();
+  TextEditingController phoneNumberTextEditingController = TextEditingController();
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
+  TextEditingController VehiclePlateNumberTextEditingController = TextEditingController();
   CommonMethods cMethods = CommonMethods();
+  XFile? imageFile;
+  String urlOfUploadedImage = "";
 
   checkIfNetworkIsAvailable()
   {
     cMethods.checkConnectivity(context);
-
-    signUpFormValidation();
+    
+    if(imageFile != null) // image validation
+      {
+        uploadImageToStorage();
+        signUpFormValidation();
+      }
+    else 
+      {
+        cMethods.displaySnackBar("Please choose an Image first.", context);
+      }
 
   }
+  
+  uploadImageToStorage() async
+  {
+    String imageIDName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference referenceImage = FirebaseStorage.instance.ref().child("Images").child(imageIDName);
 
+    UploadTask uploadTask = referenceImage.putFile(File(imageFile!.path));
+    TaskSnapshot snapshot = await uploadTask;
+    urlOfUploadedImage = await snapshot.ref.getDownloadURL();
+
+    setState(() {
+      urlOfUploadedImage;
+    });
+
+  }
+  
   signUpFormValidation()
   {
     if(userNameTextEditingController.text.trim().length < 3)
     {
       cMethods.displaySnackBar("Your name must be at least 4 or more characters.", context);
+    }
+    else if(phoneNumberTextEditingController.text.trim().length < 11)
+    {
+      cMethods.displaySnackBar("Please write valid email.", context);
     }
     else if(!emailTextEditingController.text.contains("@"))
     {
@@ -45,8 +85,13 @@ class _SignUpScreenState extends State<SignUpScreen>
     {
       cMethods.displaySnackBar("Your password must be at least 6 or more characters.", context);
     }
+    else if(VehiclePlateNumberTextEditingController.text.isEmpty)
+    {
+      cMethods.displaySnackBar("Please write your plate number.", context);
+    }
     else
     {
+      uploadImageToStorage();
       registerNewUser();
     }
   }
@@ -83,8 +128,20 @@ class _SignUpScreenState extends State<SignUpScreen>
     };
     usersRef.set(userDataMap);
 
-    Navigator.push(context, MaterialPageRoute(builder: (c)=> HomePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (c)=> Dashboard()));
 
+  }
+
+  chooseImageFromGallery() async
+  {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if(pickedFile!= null)
+    {
+      setState(() {
+        imageFile = pickedFile;
+      });
+    }
   }
 
 
@@ -99,22 +156,49 @@ class _SignUpScreenState extends State<SignUpScreen>
           child: Column(
             children: [
 
-              Image.asset(
-                "assets/images/bluelogo.jpg"
+              const SizedBox(
+                height: 60,
               ),
 
-              Padding(
-                padding: EdgeInsets.only(top: 30),
-                child: Text(
-                  "Create a User\'s Account",
+              imageFile == null ?
+              CircleAvatar(
+              backgroundImage: AssetImage("assets/images/avatarman.png"),
+              radius: 66,
+            ) : Container(
+                width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey,
+                    image: DecorationImage(
+                      fit: BoxFit.fitHeight,
+                      image: FileImage(
+                        File(
+                          imageFile!.path,
+                        )
+                      )
+                    )
+                  ),
+              ),
+
+              const SizedBox(
+                height: 30,
+              ),
+
+
+                GestureDetector(
+                  onTap: ()
+                    {
+                      chooseImageFromGallery();
+                      },
+                  child: const Text(
+                  "Choose Image",
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-
                 ),
-              ),
-
+                ),
 
 
               Padding(
@@ -136,8 +220,23 @@ class _SignUpScreenState extends State<SignUpScreen>
                         color: Colors.grey,
                         fontSize: 15,
                       ),
+                    ),
 
+                    const SizedBox(height: 22,),
 
+                    TextFormField(
+                        controller: phoneNumberTextEditingController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: <TextInputFormatter>[
+                          // for below version 2 use this
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater you-can also use this
+                          FilteringTextInputFormatter.digitsOnly
+
+                        ],
+                        decoration: InputDecoration(
+                            labelText: "Phone number",
+                        )
                     ),
 
                     const SizedBox(height: 22,),
@@ -146,7 +245,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                       controller: emailTextEditingController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: "User Email",
+                        labelText: "Email",
                         labelStyle: TextStyle(
                             fontSize: 14
                         ),
@@ -165,7 +264,25 @@ class _SignUpScreenState extends State<SignUpScreen>
                       obscureText: true,
                       keyboardType: TextInputType.text,
                       decoration: const InputDecoration(
-                        labelText: "User Password",
+                        labelText: "Create Password",
+                        labelStyle: TextStyle(
+                            fontSize: 14
+                        ),
+
+                      ),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 22,),
+
+                    TextField(
+                      controller: VehiclePlateNumberTextEditingController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: "Plate Number",
                         labelStyle: TextStyle(
                             fontSize: 14
                         ),
